@@ -3,9 +3,9 @@
 **Assignment 2 of 2 — Full-Stack Developer position**
 Stack: **Bubble.io** (app platform) + **n8n** (automation backend) + **Gemini** (AI summaries)
 
-- Bubble app (live): `<BUBBLE_APP_URL>` — test logins below
-- Bubble editor: `<BUBBLE_EDITOR_URL>` (view access enabled)
-- n8n instance: `<N8N_URL>` (self-hosted on Render, Docker)
+- Bubble app (live): https://bookleaf-royalty-57873.bubbleapps.io/version-test — test logins below
+- Bubble editor: https://bubble.io/page?id=bookleaf-royalty-57873 (view access enabled)
+- n8n instance: https://bookleaf-royalty-n8n.onrender.com (self-hosted on Render, Docker)
 - n8n workflow export: [`workflow/bookleaf-royalty-summary.json`](workflow/bookleaf-royalty-summary.json)
 - Screen recording: `<LOOM_URL>`
 
