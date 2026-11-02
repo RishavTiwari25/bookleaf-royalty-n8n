@@ -1,0 +1,28 @@
+{
+  "author_id": "AUTH005",
+  "author_name": "Meera Nair",
+  "author_email": "meera.nair@email.com",
+  "city": "Kochi",
+  "books": [
+    {
+      "title": "Cardamom & Chaos",
+      "status": "Published & Live",
+      "publication_date": "2023-04-18",
+      "copies_sold": 445,
+      "royalty_earned": 14240,
+      "royalty_paid": 14240,
+      "royalty_pending": 0,
+      "last_payout_date": "2025-12-01"
+    },
+    {
+      "title": "Letters from Lakshadweep",
+      "status": "Published & Live",
+      "publication_date": "2024-03-01",
+      "copies_sold": 201,
+      "royalty_earned": 11055,
+      "royalty_paid": 8000,
+      "royalty_pending": 3055,
+      "last_payout_date": "2025-10-15"
+    }
+  ]
+}

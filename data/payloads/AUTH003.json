@@ -1,0 +1,18 @@
+{
+  "author_id": "AUTH003",
+  "author_name": "Ananya Reddy",
+  "author_email": "ananya.reddy@email.com",
+  "city": "Hyderabad",
+  "books": [
+    {
+      "title": "Between Two Temples",
+      "status": "Published & Live",
+      "publication_date": "2024-07-05",
+      "copies_sold": 67,
+      "royalty_earned": 2546,
+      "royalty_paid": 0,
+      "royalty_pending": 2546,
+      "last_payout_date": null
+    }
+  ]
+}

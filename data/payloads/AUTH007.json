@@ -1,0 +1,38 @@
+{
+  "author_id": "AUTH007",
+  "author_name": "Sneha Kulkarni",
+  "author_email": "sneha.kulkarni@email.com",
+  "city": "Bangalore",
+  "books": [
+    {
+      "title": "The Algorithm of Love",
+      "status": "Published & Live",
+      "publication_date": "2022-12-25",
+      "copies_sold": 1567,
+      "royalty_earned": 39175,
+      "royalty_paid": 35000,
+      "royalty_pending": 4175,
+      "last_payout_date": "2025-11-15"
+    },
+    {
+      "title": "Ctrl+Alt+Delete My Ex",
+      "status": "Published & Live",
+      "publication_date": "2024-02-14",
+      "copies_sold": 723,
+      "royalty_earned": 21690,
+      "royalty_paid": 18000,
+      "royalty_pending": 3690,
+      "last_payout_date": "2025-10-15"
+    },
+    {
+      "title": "Midnight in Mysore",
+      "status": "In Production - Cover Design",
+      "publication_date": null,
+      "copies_sold": 0,
+      "royalty_earned": 0,
+      "royalty_paid": 0,
+      "royalty_pending": 0,
+      "last_payout_date": null
+    }
+  ]
+}

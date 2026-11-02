@@ -1,0 +1,28 @@
+{
+  "author_id": "AUTH002",
+  "author_name": "Rohit Kapoor",
+  "author_email": "rohit.kapoor@email.com",
+  "city": "Delhi",
+  "books": [
+    {
+      "title": "Code & Karma",
+      "status": "Published & Live",
+      "publication_date": "2023-02-14",
+      "copies_sold": 876,
+      "royalty_earned": 26280,
+      "royalty_paid": 21000,
+      "royalty_pending": 5280,
+      "last_payout_date": "2025-09-01"
+    },
+    {
+      "title": "Startup Sutra",
+      "status": "Published & Live",
+      "publication_date": "2024-05-22",
+      "copies_sold": 1203,
+      "royalty_earned": 57744,
+      "royalty_paid": 50000,
+      "royalty_pending": 7744,
+      "last_payout_date": "2025-11-15"
+    }
+  ]
+}

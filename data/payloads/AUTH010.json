@@ -1,0 +1,28 @@
+{
+  "author_id": "AUTH010",
+  "author_name": "Diya Chatterjee",
+  "author_email": "diya.chatterjee@email.com",
+  "city": "Kolkata",
+  "books": [
+    {
+      "title": "Durga’s Daughters",
+      "status": "Published & Live",
+      "publication_date": "2023-10-15",
+      "copies_sold": 612,
+      "royalty_earned": 27540,
+      "royalty_paid": 25000,
+      "royalty_pending": 2540,
+      "last_payout_date": "2025-11-15"
+    },
+    {
+      "title": "Howrah Nights",
+      "status": "Published & Live",
+      "publication_date": "2025-01-20",
+      "copies_sold": 45,
+      "royalty_earned": 1575,
+      "royalty_paid": 0,
+      "royalty_pending": 1575,
+      "last_payout_date": null
+    }
+  ]
+}

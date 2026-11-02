@@ -1,0 +1,28 @@
+{
+  "author_id": "AUTH001",
+  "author_name": "Priya Sharma",
+  "author_email": "priya.sharma@email.com",
+  "city": "Mumbai",
+  "books": [
+    {
+      "title": "Whispers of the Ganges",
+      "status": "Published & Live",
+      "publication_date": "2023-06-20",
+      "copies_sold": 342,
+      "royalty_earned": 11970,
+      "royalty_paid": 8400,
+      "royalty_pending": 3570,
+      "last_payout_date": "2025-10-15"
+    },
+    {
+      "title": "The Saffron Diaries",
+      "status": "Published & Live",
+      "publication_date": "2024-01-10",
+      "copies_sold": 189,
+      "royalty_earned": 7938,
+      "royalty_paid": 7938,
+      "royalty_pending": 0,
+      "last_payout_date": "2025-12-01"
+    }
+  ]
+}

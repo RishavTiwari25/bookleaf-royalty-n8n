@@ -1,0 +1,33 @@
+services:
+  - type: web
+    name: bookleaf-royalty-n8n
+    runtime: docker
+    plan: free
+    healthCheckPath: /healthz
+    envVars:
+      - key: N8N_PORT
+        value: "10000"
+      - key: N8N_LISTEN_ADDRESS
+        value: "0.0.0.0"
+      - key: N8N_PROTOCOL
+        value: https
+      - key: N8N_HOST
+        value: bookleaf-royalty-n8n.onrender.com
+      - key: WEBHOOK_URL
+        value: https://bookleaf-royalty-n8n.onrender.com/
+      - key: N8N_DIAGNOSTICS_ENABLED
+        value: "false"
+      - key: N8N_PERSONALIZATION_ENABLED
+        value: "false"
+      - key: DB_SQLITE_POOL_SIZE
+        value: "1"
+      - key: N8N_RUNNERS_ENABLED
+        value: "true"
+      - key: GEMINI_MODEL
+        value: gemini-3.5-flash-lite
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: BOOKLEAF_WEBHOOK_SECRET
+        sync: false
+      - key: N8N_ENCRYPTION_KEY
+        sync: false

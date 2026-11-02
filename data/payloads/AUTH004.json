@@ -1,0 +1,28 @@
+{
+  "author_id": "AUTH004",
+  "author_name": "Vikram Joshi",
+  "author_email": "vikram.joshi@email.com",
+  "city": "Pune",
+  "books": [
+    {
+      "title": "Debugging Life",
+      "status": "Published & Live",
+      "publication_date": "2023-11-30",
+      "copies_sold": 534,
+      "royalty_earned": 13350,
+      "royalty_paid": 10000,
+      "royalty_pending": 3350,
+      "last_payout_date": "2025-08-20"
+    },
+    {
+      "title": "The Last Monsoon",
+      "status": "Published & Live",
+      "publication_date": "2024-08-15",
+      "copies_sold": 123,
+      "royalty_earned": 1845,
+      "royalty_paid": 1845,
+      "royalty_pending": 0,
+      "last_payout_date": "2025-12-01"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "author_id": "AUTH006",
+  "author_name": "Arjun Malhotra",
+  "author_email": "arjun.malhotra@email.com",
+  "city": "Chandigarh",
+  "books": [
+    {
+      "title": "Turban Tales",
+      "status": "Published & Live",
+      "publication_date": "2024-09-10",
+      "copies_sold": 88,
+      "royalty_earned": 2464,
+      "royalty_paid": 0,
+      "royalty_pending": 2464,
+      "last_payout_date": null
+    }
+  ]
+}
