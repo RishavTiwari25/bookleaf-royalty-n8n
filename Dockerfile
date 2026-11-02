@@ -1,4 +1,5 @@
-FROM docker.n8n.io/n8nio/n8n:latest
+# Docker Hub mirror (docker.n8n.io rate-limits anonymous pulls from CI/CD)
+FROM docker.io/n8nio/n8n:2.22.6
 
 USER root
 COPY workflow /workflow
