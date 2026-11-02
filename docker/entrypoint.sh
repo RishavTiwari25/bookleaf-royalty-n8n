@@ -4,6 +4,6 @@
 set -e
 
 n8n import:workflow --input=/workflow/bookleaf-royalty-summary.json
-n8n update:workflow --all --active=true
+n8n publish:workflow --id=BookLeafRoyalty1 || n8n update:workflow --all --active=true
 
 exec n8n start

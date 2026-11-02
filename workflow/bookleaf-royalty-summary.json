@@ -1,4 +1,5 @@
 {
+  "id": "BookLeafRoyalty1",
   "name": "BookLeaf — Royalty Summary (Bubble → n8n → Gemini)",
   "nodes": [
     {
@@ -12,18 +13,8 @@
       "name": "Webhook — Royalty Summary",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
-      "position": [-380, 0],
+      "position": [-600, 0],
       "webhookId": "bookleaf-royalty-summary"
-    },
-    {
-      "parameters": {
-        "jsCode": "// 1) Authenticate the caller (shared secret header) and validate the payload.\nconst req = $input.first().json;\nconst headers = req.headers || {};\nconst body = req.body || {};\n\nconst secret = $env.BOOKLEAF_WEBHOOK_SECRET || '';\nconst given = headers['x-bookleaf-secret'] || headers['X-Bookleaf-Secret'] || '';\nconst authOk = Boolean(secret) && given === secret;\n\nconst errors = [];\nif (!authOk) errors.push('Unauthorized: invalid or missing x-bookleaf-secret header');\nif (!body.author_id) errors.push('author_id is required');\nif (!body.author_name) errors.push('author_name is required');\n\nlet books = body.books;\nif (typeof books === 'string') {\n  try { books = JSON.parse(books); } catch (e) { errors.push('books is not valid JSON: ' + e.message); }\n}\nif (!Array.isArray(books)) {\n  if (!errors.some((x) => x.startsWith('books'))) errors.push('books must be a list');\n  books = [];\n}\n\nreturn [{ json: {\n  valid: errors.length === 0,\n  errors,\n  author_id: String(body.author_id || ''),\n  author_name: String(body.author_name || ''),\n  author_email: String(body.author_email || ''),\n  city: String(body.city || ''),\n  books,\n} }];"
-      },
-      "id": "a1000000-0000-4000-8000-000000000002",
-      "name": "Auth & Validate",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [-160, 0]
     },
     {
       "parameters": {
@@ -31,7 +22,57 @@
           "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
           "conditions": [
             {
-              "id": "c-auth",
+              "id": "c-secret-set",
+              "leftValue": "={{ ($env.BOOKLEAF_WEBHOOK_SECRET || '').length }}",
+              "rightValue": 0,
+              "operator": { "type": "number", "operation": "gt" }
+            },
+            {
+              "id": "c-secret-match",
+              "leftValue": "={{ $json.headers['x-bookleaf-secret'] || '' }}",
+              "rightValue": "={{ $env.BOOKLEAF_WEBHOOK_SECRET }}",
+              "operator": { "type": "string", "operation": "equals" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a1000000-0000-4000-8000-000000000002",
+      "name": "Authorized?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [-380, 0]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ status: 'Failed', error: 'Unauthorized: invalid or missing x-bookleaf-secret header' }) }}",
+        "options": { "responseCode": 401 }
+      },
+      "id": "a1000000-0000-4000-8000-000000000003",
+      "name": "Respond 401",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [-160, 180]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Validate the payload shape (auth already checked by the Authorized? node).\nconst req = $input.first().json;\nconst body = req.body || {};\n\nconst errors = [];\nif (!body.author_id) errors.push('author_id is required');\nif (!body.author_name) errors.push('author_name is required');\n\nlet books = body.books;\nif (typeof books === 'string') {\n  try { books = JSON.parse(books); } catch (e) { errors.push('books is not valid JSON: ' + e.message); }\n}\nif (!Array.isArray(books)) {\n  if (!errors.some((x) => x.startsWith('books'))) errors.push('books must be a list');\n  books = [];\n}\n\nreturn [{ json: {\n  valid: errors.length === 0,\n  errors,\n  author_id: String(body.author_id || ''),\n  author_name: String(body.author_name || ''),\n  author_email: String(body.author_email || ''),\n  city: String(body.city || ''),\n  books,\n} }];"
+      },
+      "id": "a1000000-0000-4000-8000-000000000004",
+      "name": "Validate Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-160, -60]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
+          "conditions": [
+            {
+              "id": "c-valid",
               "leftValue": "={{ $json.valid }}",
               "rightValue": "",
               "operator": { "type": "boolean", "operation": "true", "singleValue": true }
@@ -41,33 +82,33 @@
         },
         "options": {}
       },
-      "id": "a1000000-0000-4000-8000-000000000003",
-      "name": "Authorized?",
+      "id": "a1000000-0000-4000-8000-000000000005",
+      "name": "Valid?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
-      "position": [60, 0]
+      "position": [60, -60]
     },
     {
       "parameters": {
         "respondWith": "json",
         "responseBody": "={{ JSON.stringify({ status: 'Failed', error: $json.errors.join('; ') }) }}",
-        "options": { "responseCode": 401 }
+        "options": { "responseCode": 400 }
       },
-      "id": "a1000000-0000-4000-8000-000000000004",
-      "name": "Respond 401",
+      "id": "a1000000-0000-4000-8000-000000000006",
+      "name": "Respond 400",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [280, 180]
+      "position": [280, 100]
     },
     {
       "parameters": {
-        "jsCode": "// 2) Compute royalty facts (badges, totals, next payout) + build the AI prompt\n//    and a deterministic fallback email so an AI outage never breaks the flow.\nconst inp = $input.first().json;\nconst today = new Date();\n\nconst INR = (n) => '\\u20B9' + Number(n || 0).toLocaleString('en-IN');\nconst DATE = (d) => d ? new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) : null;\nconst DAY = 86400000;\n\nconst books = (inp.books || []).map((b) => ({\n  title: String(b.title || 'Untitled'),\n  status: String(b.status || ''),\n  publication_date: b.publication_date || null,\n  copies_sold: Number(b.copies_sold || 0),\n  royalty_earned: Number(b.royalty_earned || 0),\n  royalty_paid: Number(b.royalty_paid || 0),\n  royalty_pending: Number(b.royalty_pending || 0),\n  last_payout_date: b.last_payout_date || null,\n}));\n\n// Royalty status badge, mirroring the dashboard rule (90-day overdue window)\nfor (const b of books) {\n  const published = b.status.startsWith('Published');\n  if (!published) { b.badge = 'NA'; continue; }\n  if (b.royalty_pending <= 0) { b.badge = 'GREEN'; continue; }\n  const anchor = b.last_payout_date || b.publication_date;\n  const overdue = anchor ? (today - new Date(anchor)) > 90 * DAY : false;\n  b.badge = overdue ? 'RED' : 'YELLOW';\n}\n\nconst published = books.filter((b) => b.status.startsWith('Published'));\nconst inProduction = books.filter((b) => !b.status.startsWith('Published'));\nconst totals = {\n  earned: published.reduce((s, b) => s + b.royalty_earned, 0),\n  paid: published.reduce((s, b) => s + b.royalty_paid, 0),\n  pending: published.reduce((s, b) => s + b.royalty_pending, 0),\n};\nconst neverPaid = published.some((b) => b.royalty_pending > 0 && !b.last_payout_date);\n\n// Next payout from the KB: quarterly cycle (Mar 31 / Jun 30 / Sep 30 / Dec 31), paid within 45 days.\nconst y = today.getFullYear();\nconst qEnds = [new Date(y - 1, 11, 31), new Date(y, 2, 31), new Date(y, 5, 30), new Date(y, 8, 30), new Date(y, 11, 31)];\nlet lastQ = qEnds[0];\nfor (const q of qEnds) if (q <= today) lastQ = q;\nconst windowEnd = new Date(lastQ.getTime() + 45 * DAY);\nconst nextQ = qEnds.find((q) => q > today) || new Date(y + 1, 2, 31);\nconst nextPayout = today <= windowEnd ? windowEnd : new Date(nextQ.getTime() + 45 * DAY);\nconst nextPayoutStr = DATE(nextPayout);\nconst rollover = totals.pending > 0 && totals.pending < 1000;\n\n// Idempotency: ignore repeat triggers for the same author within 60 seconds.\nconst sd = $getWorkflowStaticData('global');\nsd.lastTrigger = sd.lastTrigger || {};\nconst prev = Number(sd.lastTrigger[inp.author_id] || 0);\nconst duplicate = Date.now() - prev < 60000;\nif (!duplicate) sd.lastTrigger[inp.author_id] = Date.now();\n\n// ---- Facts block (the only numbers the AI may use) ----\nconst lines = [];\nlines.push(`Author: ${inp.author_name}${inp.city ? ' (' + inp.city + ')' : ''}`);\nlines.push(`Date of this summary: ${DATE(today)}`);\nlines.push('');\nlines.push('PUBLISHED BOOKS:');\nif (published.length === 0) lines.push('- none published yet');\nfor (const b of published) {\n  lines.push(`- \"${b.title}\": ${b.copies_sold} copies sold; earned ${INR(b.royalty_earned)}; paid ${INR(b.royalty_paid)}; pending ${INR(b.royalty_pending)}; last payout ${DATE(b.last_payout_date) || 'none yet'}; payout status ${b.badge}`);\n}\nif (inProduction.length > 0) {\n  lines.push('');\n  lines.push('BOOKS IN PRODUCTION (no sales or royalties yet):');\n  for (const b of inProduction) lines.push(`- \"${b.title}\": current stage ${b.status}`);\n}\nlines.push('');\nlines.push(`TOTALS: earned ${INR(totals.earned)}; paid ${INR(totals.paid)}; pending ${INR(totals.pending)}`);\nif (totals.pending > 0) {\n  lines.push(`NEXT PAYOUT: pending amounts are expected by ${nextPayoutStr} (quarterly cycle, paid within 45 days of quarter end).`);\n  if (rollover) lines.push('NOTE: the pending amount is below the \\u20B91,000 minimum payout, so it rolls over to the next quarter.');\n  if (neverPaid) lines.push('NOTE: this author has earned royalties but has never received a payout yet; acknowledge this plainly.');\n} else {\n  lines.push('ALL ROYALTIES ARE FULLY PAID UP.');\n}\nconst factsBlock = lines.join('\\n');\n\nconst systemPrompt = [\n  'You write royalty summary emails from the BookLeaf author support team. A human admin reviews the email before it is sent.',\n  '',\n  'Writing rules:',\n  \"1. Open with \\\"Hi <author's first name>,\\\" then one warm sentence introducing this as their royalty summary.\",\n  '2. Summarise each published book with its exact sales and royalty figures from AUTHOR FACTS. Never invent amounts, dates or names. If a fact is missing, leave it out.',\n  '3. Give a clear breakdown: total earned, total paid, total pending.',\n  '4. If there is a pending amount, state the exact expected payout date given in AUTHOR FACTS and briefly explain the quarterly cycle with its 45-day payment window. If a note says the author has never been paid, acknowledge it honestly \\u2014 no corporate deflection.',\n  '5. If everything is paid up, say so with a positive acknowledgement.',\n  '6. If any books are in production, add a brief, encouraging status update for them.',\n  '7. Plain text only: no markdown, no bullet symbols, no placeholders. Keep it under 250 words, in short paragraphs.',\n  '8. Finish with exactly:\\nWarm regards,\\nBookLeaf Author Support',\n  '',\n  'BOOKLEAF KNOWLEDGE BASE (only source of policy facts):',\n  'ABOUT BOOKLEAF',\n  '- Self-publishing company operating in India and the US.',\n  '- BookLeaf handles cover design, typesetting, ISBN assignment, printing, distribution and royalty management.',\n  '',\n  'TONE RULES',\n  '- Always empathetic and professional. Authors are partners, not customers to be managed.',\n  '- Be specific: use actual numbers, dates and statuses instead of vague reassurance.',\n  '- If royalties are delayed and it is BookLeaf\\u2019s fault, own it directly.',\n  '- Always end with a clear next step for the author and/or BookLeaf.',\n  '',\n  'ROYALTY & PAYMENTS',\n  '- Split: 80/20 of net profit per book; the author receives 80%.',\n  '- Royalties are calculated quarterly (quarters end Mar 31, Jun 30, Sep 30, Dec 31) and paid within 45 days of quarter end.',\n  '- Minimum payout is \\u20B91,000. Smaller balances roll over to the next quarter.',\n  '- Paid by bank transfer to the account linked in the author dashboard; ask the author to confirm their bank details are linked if a payout is due.',\n].join('\\n');\n\nconst userPrompt = `AUTHOR FACTS:\\n${factsBlock}\\n\\nWrite the royalty summary email to the author now.`;\n\n// Deterministic fallback email (used when the AI call fails or returns nothing)\nconst first = (inp.author_name || 'there').split(' ')[0];\nconst fb = [];\nfb.push(`Hi ${first},`);\nfb.push('');\nfb.push('Here is your latest royalty summary from BookLeaf.');\nfb.push('');\nfor (const b of published) {\n  fb.push(`${b.title}: ${b.copies_sold} copies sold, ${INR(b.royalty_earned)} earned, ${INR(b.royalty_paid)} paid, ${INR(b.royalty_pending)} pending (last payout: ${DATE(b.last_payout_date) || 'none yet'}).`);\n}\nif (published.length > 0) fb.push('');\nfb.push(`Across all your books you have earned ${INR(totals.earned)}, of which ${INR(totals.paid)} has been paid and ${INR(totals.pending)} is pending.`);\nif (totals.pending > 0) {\n  fb.push(`Your pending amount is expected by ${nextPayoutStr}, in line with our quarterly cycle (royalties are paid within 45 days of each quarter end). Please make sure your bank details are linked in your dashboard.`);\n  if (rollover) fb.push('As the pending amount is below the \\u20B91,000 minimum payout, it will roll over to the next quarter.');\n} else {\n  fb.push('All your royalties are fully paid up \\u2014 thank you for publishing with BookLeaf!');\n}\nfor (const b of inProduction) {\n  fb.push(`Your book \"${b.title}\" is currently at the ${b.status.replace('In Production - ', '')} stage. We will keep you posted as it moves forward.`);\n}\nfb.push('');\nfb.push('Warm regards,');\nfb.push('BookLeaf Author Support');\n\nconst monthYear = today.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });\n\nreturn [{ json: {\n  author_id: inp.author_id,\n  author_name: inp.author_name,\n  author_email: inp.author_email,\n  duplicate,\n  email_subject: `Your BookLeaf royalty summary \\u2014 ${monthYear}`,\n  facts: factsBlock,\n  fallback_email: fb.join('\\n'),\n  gemini_request: {\n    contents: [{ role: 'user', parts: [{ text: userPrompt }] }],\n    systemInstruction: { parts: [{ text: systemPrompt }] },\n    generationConfig: { temperature: 0.3, maxOutputTokens: 1024 },\n  },\n} }];"
+        "jsCode": "// Compute royalty facts (badges, totals, next payout) + build the AI prompt\n// and a deterministic fallback email so an AI outage never breaks the flow.\nconst inp = $input.first().json;\nconst today = new Date();\n\nconst INR = (n) => '\\u20B9' + Number(n || 0).toLocaleString('en-IN');\nconst DATE = (d) => d ? new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) : null;\nconst DAY = 86400000;\n\nconst books = (inp.books || []).map((b) => ({\n  title: String(b.title || 'Untitled'),\n  status: String(b.status || ''),\n  publication_date: b.publication_date || null,\n  copies_sold: Number(b.copies_sold || 0),\n  royalty_earned: Number(b.royalty_earned || 0),\n  royalty_paid: Number(b.royalty_paid || 0),\n  royalty_pending: Number(b.royalty_pending || 0),\n  last_payout_date: b.last_payout_date || null,\n}));\n\n// Royalty status badge, mirroring the dashboard rule (90-day overdue window)\nfor (const b of books) {\n  const published = b.status.startsWith('Published');\n  if (!published) { b.badge = 'NA'; continue; }\n  if (b.royalty_pending <= 0) { b.badge = 'GREEN'; continue; }\n  const anchor = b.last_payout_date || b.publication_date;\n  const overdue = anchor ? (today - new Date(anchor)) > 90 * DAY : false;\n  b.badge = overdue ? 'RED' : 'YELLOW';\n}\n\nconst published = books.filter((b) => b.status.startsWith('Published'));\nconst inProduction = books.filter((b) => !b.status.startsWith('Published'));\nconst totals = {\n  earned: published.reduce((s, b) => s + b.royalty_earned, 0),\n  paid: published.reduce((s, b) => s + b.royalty_paid, 0),\n  pending: published.reduce((s, b) => s + b.royalty_pending, 0),\n};\nconst neverPaid = published.some((b) => b.royalty_pending > 0 && !b.last_payout_date);\n\n// Next payout from the KB: quarterly cycle (Mar 31 / Jun 30 / Sep 30 / Dec 31), paid within 45 days.\nconst y = today.getFullYear();\nconst qEnds = [new Date(y - 1, 11, 31), new Date(y, 2, 31), new Date(y, 5, 30), new Date(y, 8, 30), new Date(y, 11, 31)];\nlet lastQ = qEnds[0];\nfor (const q of qEnds) if (q <= today) lastQ = q;\nconst windowEnd = new Date(lastQ.getTime() + 45 * DAY);\nconst nextQ = qEnds.find((q) => q > today) || new Date(y + 1, 2, 31);\nconst nextPayout = today <= windowEnd ? windowEnd : new Date(nextQ.getTime() + 45 * DAY);\nconst nextPayoutStr = DATE(nextPayout);\nconst rollover = totals.pending > 0 && totals.pending < 1000;\n\n// Idempotency: ignore repeat triggers for the same author within 60 seconds.\nconst sd = $getWorkflowStaticData('global');\nsd.lastTrigger = sd.lastTrigger || {};\nconst prev = Number(sd.lastTrigger[inp.author_id] || 0);\nconst duplicate = Date.now() - prev < 60000;\nif (!duplicate) sd.lastTrigger[inp.author_id] = Date.now();\n\n// ---- Facts block (the only numbers the AI may use) ----\nconst lines = [];\nlines.push(`Author: ${inp.author_name}${inp.city ? ' (' + inp.city + ')' : ''}`);\nlines.push(`Date of this summary: ${DATE(today)}`);\nlines.push('');\nlines.push('PUBLISHED BOOKS:');\nif (published.length === 0) lines.push('- none published yet');\nfor (const b of published) {\n  lines.push(`- \"${b.title}\": ${b.copies_sold} copies sold; earned ${INR(b.royalty_earned)}; paid ${INR(b.royalty_paid)}; pending ${INR(b.royalty_pending)}; last payout ${DATE(b.last_payout_date) || 'none yet'}; payout status ${b.badge}`);\n}\nif (inProduction.length > 0) {\n  lines.push('');\n  lines.push('BOOKS IN PRODUCTION (no sales or royalties yet):');\n  for (const b of inProduction) lines.push(`- \"${b.title}\": current stage ${b.status}`);\n}\nlines.push('');\nlines.push(`TOTALS: earned ${INR(totals.earned)}; paid ${INR(totals.paid)}; pending ${INR(totals.pending)}`);\nif (totals.pending > 0) {\n  lines.push(`NEXT PAYOUT: pending amounts are expected by ${nextPayoutStr} (quarterly cycle, paid within 45 days of quarter end).`);\n  if (rollover) lines.push('NOTE: the pending amount is below the \\u20B91,000 minimum payout, so it rolls over to the next quarter.');\n  if (neverPaid) lines.push('NOTE: this author has earned royalties but has never received a payout yet; acknowledge this plainly.');\n} else {\n  lines.push('ALL ROYALTIES ARE FULLY PAID UP.');\n}\nconst factsBlock = lines.join('\\n');\n\nconst systemPrompt = [\n  'You write royalty summary emails from the BookLeaf author support team. A human admin reviews the email before it is sent.',\n  '',\n  'Writing rules:',\n  \"1. Open with \\\"Hi <author's first name>,\\\" then one warm sentence introducing this as their royalty summary.\",\n  '2. Summarise each published book with its exact sales and royalty figures from AUTHOR FACTS. Never invent amounts, dates or names. If a fact is missing, leave it out.',\n  '3. Give a clear breakdown: total earned, total paid, total pending.',\n  '4. If there is a pending amount, state the exact expected payout date given in AUTHOR FACTS and briefly explain the quarterly cycle with its 45-day payment window. If a note says the author has never been paid, acknowledge it honestly \\u2014 no corporate deflection.',\n  '5. If everything is paid up, say so with a positive acknowledgement.',\n  '6. If any books are in production, add a brief, encouraging status update for them.',\n  '7. Plain text only: no markdown, no bullet symbols, no placeholders. Keep it under 250 words, in short paragraphs.',\n  '8. Finish with exactly:\\nWarm regards,\\nBookLeaf Author Support',\n  '',\n  'BOOKLEAF KNOWLEDGE BASE (only source of policy facts):',\n  'ABOUT BOOKLEAF',\n  '- Self-publishing company operating in India and the US.',\n  '- BookLeaf handles cover design, typesetting, ISBN assignment, printing, distribution and royalty management.',\n  '',\n  'TONE RULES',\n  '- Always empathetic and professional. Authors are partners, not customers to be managed.',\n  '- Be specific: use actual numbers, dates and statuses instead of vague reassurance.',\n  '- If royalties are delayed and it is BookLeaf\\u2019s fault, own it directly.',\n  '- Always end with a clear next step for the author and/or BookLeaf.',\n  '',\n  'ROYALTY & PAYMENTS',\n  '- Split: 80/20 of net profit per book; the author receives 80%.',\n  '- Royalties are calculated quarterly (quarters end Mar 31, Jun 30, Sep 30, Dec 31) and paid within 45 days of quarter end.',\n  '- Minimum payout is \\u20B91,000. Smaller balances roll over to the next quarter.',\n  '- Paid by bank transfer to the account linked in the author dashboard; ask the author to confirm their bank details are linked if a payout is due.',\n].join('\\n');\n\nconst userPrompt = `AUTHOR FACTS:\\n${factsBlock}\\n\\nWrite the royalty summary email to the author now.`;\n\n// Deterministic fallback email (used when the AI call fails or returns nothing)\nconst first = (inp.author_name || 'there').split(' ')[0];\nconst fb = [];\nfb.push(`Hi ${first},`);\nfb.push('');\nfb.push('Here is your latest royalty summary from BookLeaf.');\nfb.push('');\nfor (const b of published) {\n  fb.push(`${b.title}: ${b.copies_sold} copies sold, ${INR(b.royalty_earned)} earned, ${INR(b.royalty_paid)} paid, ${INR(b.royalty_pending)} pending (last payout: ${DATE(b.last_payout_date) || 'none yet'}).`);\n}\nif (published.length > 0) fb.push('');\nfb.push(`Across all your books you have earned ${INR(totals.earned)}, of which ${INR(totals.paid)} has been paid and ${INR(totals.pending)} is pending.`);\nif (totals.pending > 0) {\n  fb.push(`Your pending amount is expected by ${nextPayoutStr}, in line with our quarterly cycle (royalties are paid within 45 days of each quarter end). Please make sure your bank details are linked in your dashboard.`);\n  if (rollover) fb.push('As the pending amount is below the \\u20B91,000 minimum payout, it will roll over to the next quarter.');\n} else {\n  fb.push('All your royalties are fully paid up \\u2014 thank you for publishing with BookLeaf!');\n}\nfor (const b of inProduction) {\n  fb.push(`Your book \"${b.title}\" is currently at the ${b.status.replace('In Production - ', '')} stage. We will keep you posted as it moves forward.`);\n}\nfb.push('');\nfb.push('Warm regards,');\nfb.push('BookLeaf Author Support');\n\nconst monthYear = today.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });\n\nreturn [{ json: {\n  author_id: inp.author_id,\n  author_name: inp.author_name,\n  author_email: inp.author_email,\n  duplicate,\n  email_subject: `Your BookLeaf royalty summary \\u2014 ${monthYear}`,\n  facts: factsBlock,\n  fallback_email: fb.join('\\n'),\n  gemini_request: {\n    contents: [{ role: 'user', parts: [{ text: userPrompt }] }],\n    systemInstruction: { parts: [{ text: systemPrompt }] },\n    generationConfig: { temperature: 0.3, maxOutputTokens: 1024 },\n  },\n} }];"
       },
-      "id": "a1000000-0000-4000-8000-000000000005",
+      "id": "a1000000-0000-4000-8000-000000000007",
       "name": "Royalty Facts & Prompt",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [280, -100]
+      "position": [280, -140]
     },
     {
       "parameters": {
@@ -85,11 +126,11 @@
         },
         "options": {}
       },
-      "id": "a1000000-0000-4000-8000-000000000006",
+      "id": "a1000000-0000-4000-8000-000000000008",
       "name": "Duplicate?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
-      "position": [500, -100]
+      "position": [500, -140]
     },
     {
       "parameters": {
@@ -97,11 +138,11 @@
         "responseBody": "={{ JSON.stringify({ status: 'Ignored', reason: 'Duplicate trigger for this author within 60 seconds', author_id: $json.author_id }) }}",
         "options": { "responseCode": 200 }
       },
-      "id": "a1000000-0000-4000-8000-000000000007",
+      "id": "a1000000-0000-4000-8000-000000000009",
       "name": "Respond — Duplicate",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [720, 60]
+      "position": [720, 20]
     },
     {
       "parameters": {
@@ -118,11 +159,11 @@
         "jsonBody": "={{ JSON.stringify($json.gemini_request) }}",
         "options": { "timeout": 30000 }
       },
-      "id": "a1000000-0000-4000-8000-000000000008",
+      "id": "a1000000-0000-4000-8000-000000000010",
       "name": "Gemini — Generate Summary",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [720, -160],
+      "position": [720, -200],
       "retryOnFail": true,
       "maxTries": 2,
       "waitBetweenTries": 2000,
@@ -130,43 +171,49 @@
     },
     {
       "parameters": {
-        "jsCode": "// 3a) Extract the AI email; fall back to the deterministic template if the\n//     response is empty or malformed.\nconst resp = $input.first().json;\nconst f = $('Royalty Facts & Prompt').first().json;\n\nlet text = '';\ntry {\n  text = (resp.candidates?.[0]?.content?.parts || []).map((p) => p.text || '').join('').trim();\n} catch (e) { text = ''; }\n\nconst usedAI = text.length >= 40;\nreturn [{ json: {\n  status: 'Success',\n  author_id: f.author_id,\n  author_name: f.author_name,\n  author_email: f.author_email,\n  email_subject: f.email_subject,\n  email_body: usedAI ? text : f.fallback_email,\n  source: usedAI ? 'AI' : 'FALLBACK',\n  model: usedAI ? ($env.GEMINI_MODEL || 'gemini-3.5-flash-lite') : null,\n  note: usedAI ? undefined : 'AI returned an empty or malformed response; deterministic fallback used.',\n  generated_at: new Date().toISOString(),\n} }];"
+        "jsCode": "// Extract the AI email; fall back to the deterministic template if the\n// response is empty or malformed.\nconst resp = $input.first().json;\nconst f = $('Royalty Facts & Prompt').first().json;\n\nlet text = '';\ntry {\n  text = (resp.candidates?.[0]?.content?.parts || []).map((p) => p.text || '').join('').trim();\n} catch (e) { text = ''; }\n\nconst usedAI = text.length >= 40;\nreturn [{ json: {\n  status: 'Success',\n  author_id: f.author_id,\n  author_name: f.author_name,\n  author_email: f.author_email,\n  email_subject: f.email_subject,\n  email_body: usedAI ? text : f.fallback_email,\n  source: usedAI ? 'AI' : 'FALLBACK',\n  model: usedAI ? (resp.modelVersion || 'gemini') : null,\n  note: usedAI ? undefined : 'AI returned an empty or malformed response; deterministic fallback used.',\n  generated_at: new Date().toISOString(),\n} }];"
       },
-      "id": "a1000000-0000-4000-8000-000000000009",
+      "id": "a1000000-0000-4000-8000-000000000011",
       "name": "Parse AI Response",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [940, -160]
+      "position": [940, -200]
     },
     {
       "parameters": {
-        "jsCode": "// 3b) AI call failed (network / quota / 4xx-5xx): never break silently.\n//     Serve the deterministic fallback email and say why.\nconst f = $('Royalty Facts & Prompt').first().json;\nconst err = $input.first().json?.error;\nconst reason = (err && (err.message || err.description)) || 'AI API call failed';\n\nreturn [{ json: {\n  status: 'Success',\n  author_id: f.author_id,\n  author_name: f.author_name,\n  author_email: f.author_email,\n  email_subject: f.email_subject,\n  email_body: f.fallback_email,\n  source: 'FALLBACK',\n  model: null,\n  note: 'AI unavailable: ' + String(reason).slice(0, 300),\n  generated_at: new Date().toISOString(),\n} }];"
+        "jsCode": "// AI call failed (network / quota / 4xx-5xx): never break silently.\n// Serve the deterministic fallback email and say why.\nconst f = $('Royalty Facts & Prompt').first().json;\nconst err = $input.first().json?.error;\nconst reason = (err && (err.message || err.description)) || 'AI API call failed';\n\nreturn [{ json: {\n  status: 'Success',\n  author_id: f.author_id,\n  author_name: f.author_name,\n  author_email: f.author_email,\n  email_subject: f.email_subject,\n  email_body: f.fallback_email,\n  source: 'FALLBACK',\n  model: null,\n  note: 'AI unavailable: ' + String(reason).slice(0, 300),\n  generated_at: new Date().toISOString(),\n} }];"
       },
-      "id": "a1000000-0000-4000-8000-000000000010",
+      "id": "a1000000-0000-4000-8000-000000000012",
       "name": "AI Failed — Fallback",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [940, 0]
+      "position": [940, -40]
     },
     {
       "parameters": {
         "respondWith": "firstIncomingItem",
         "options": { "responseCode": 200 }
       },
-      "id": "a1000000-0000-4000-8000-000000000011",
+      "id": "a1000000-0000-4000-8000-000000000013",
       "name": "Respond — Summary",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [1160, -80]
+      "position": [1160, -120]
     }
   ],
   "connections": {
-    "Webhook — Royalty Summary": { "main": [[{ "node": "Auth & Validate", "type": "main", "index": 0 }]] },
-    "Auth & Validate": { "main": [[{ "node": "Authorized?", "type": "main", "index": 0 }]] },
+    "Webhook — Royalty Summary": { "main": [[{ "node": "Authorized?", "type": "main", "index": 0 }]] },
     "Authorized?": {
       "main": [
-        [{ "node": "Royalty Facts & Prompt", "type": "main", "index": 0 }],
+        [{ "node": "Validate Payload", "type": "main", "index": 0 }],
         [{ "node": "Respond 401", "type": "main", "index": 0 }]
+      ]
+    },
+    "Validate Payload": { "main": [[{ "node": "Valid?", "type": "main", "index": 0 }]] },
+    "Valid?": {
+      "main": [
+        [{ "node": "Royalty Facts & Prompt", "type": "main", "index": 0 }],
+        [{ "node": "Respond 400", "type": "main", "index": 0 }]
       ]
     },
     "Royalty Facts & Prompt": { "main": [[{ "node": "Duplicate?", "type": "main", "index": 0 }]] },
