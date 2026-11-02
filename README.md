@@ -61,8 +61,6 @@ event and logged as Failed.
 
 ## 2. Bubble database schema
 
-*(final schema with screenshots in the submission; summary:)*
-
 - **User** (built-in auth) — `role` (Option set: Author / Admin), `author` (→ Author).
   On signup the account auto-links to the Author record with the same email.
 - **Author** — author_id, name, email, phone, city, joined_date. 10 records.
@@ -138,8 +136,36 @@ Same philosophy as my Assignment 1 submission:
 
 ## 5. Learning process (Bubble was new to me)
 
-*(filled in with the honest build notes — what I tried, what didn't work, workarounds:
-bulk trigger loop on the free plan, CSV import quirks, privacy-rule testing, etc.)*
+Honest notes from the build, roughly in the order I hit them:
+
+- **Plan limits shaped the architecture more than anything else.** I planned to import
+  the dataset via CSV upload — that's a paid feature, so all 10 authors and 18 books
+  went in through the App Data entry dialogs instead, with the author links set via the
+  reference picker. Same story for the Data API and backend workflows (see §1): the
+  payload-in-webhook + synchronous-response design is the free-plan-correct answer, not
+  a shortcut.
+- **Reference fields need a primary display field.** The Author picker in the Book
+  entry dialog found nothing until I set Data tab → "Edit primary fields" →
+  Author → name (new types default to *unique id*, which is unsearchable in practice).
+- **The date editor has opinions.** Bubble's DateBox wants `MM/DD/YYYY hh:mm am/pm`;
+  a date without a time doesn't commit. All dataset dates are stored at 12:00 pm.
+- **Bulk trigger on the free plan.** "Schedule API workflow on a list" is paid-only, so
+  the bulk button uses page custom states (a list of pending authors + an index) with a
+  *Do every 2 seconds* event stepping through them and firing the same custom event the
+  single-author button uses. Slower than a backend loop, but visible, debuggable, and
+  it reuses one code path for both triggers.
+- **API Connector details that cost me time:** the call must be initialized before it
+  can be used as an action (I initialized with a manually-entered response first so the
+  Bubble side wasn't blocked on the n8n deploy); "Include errors in response" is what
+  makes graceful failure handling possible in the workflow (branch on *returned an
+  error*), otherwise a 401/timeout just breaks the workflow run.
+- **Deploying n8n taught me more than Bubble did.** n8n's own registry rate-limited
+  Render's image pulls (429) → switched to Docker Hub; n8n v2's mandatory task-runner
+  sidecar OOM-crashlooped Render's 512 MB free tier (health flapping 200→502) →
+  pinned n8n 1.94.1 with a 384 MB heap cap, stable since. Also: n8n v2 blocks `$env`
+  in Code nodes and expressions by default — which is why the webhook-secret check
+  lives in an IF-node expression and the whole thing is documented in the workflow
+  design section above.
 
 ## 6. AI tools disclosure
 
