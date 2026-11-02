@@ -1,6 +1,7 @@
 {
   "id": "BookLeafRoyalty1",
   "name": "BookLeaf — Royalty Summary (Bubble → n8n → Gemini)",
+  "active": false,
   "nodes": [
     {
       "parameters": {
