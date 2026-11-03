@@ -7,7 +7,7 @@ Stack: **Bubble.io** (app platform) + **n8n** (automation backend) + **Gemini** 
 - Bubble editor: https://bubble.io/page?id=bookleaf-royalty-57873 (view access enabled)
 - n8n instance: https://bookleaf-royalty-n8n.onrender.com (self-hosted on Render, Docker)
 - n8n workflow export: [`workflow/bookleaf-royalty-summary.json`](workflow/bookleaf-royalty-summary.json)
-- Screen recording: `<LOOM_URL>`
+- Screen recording: `bookleaf_assignment2_demo.mp4` (4 min 40 s, attached to the submission email)
 
 **Test logins**
 | Role | Email | Password |
