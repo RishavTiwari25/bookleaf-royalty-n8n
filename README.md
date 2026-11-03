@@ -151,7 +151,7 @@ Honest notes from the build, roughly in the order I hit them:
   a date without a time doesn't commit. All dataset dates are stored at 12:00 pm.
 - **Bulk trigger on the free plan.** "Schedule API workflow on a list" is paid-only, so
   the bulk button uses page custom states (a list of pending authors + an index) with a
-  *Do every 2 seconds* event stepping through them and firing the same custom event the
+  *Do every 6 seconds* event stepping through them and firing the same custom event the
   single-author button uses. Slower than a backend loop, but visible, debuggable, and
   it reuses one code path for both triggers.
 - **API Connector details that cost me time:** the call must be initialized before it
